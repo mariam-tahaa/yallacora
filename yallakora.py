@@ -17,13 +17,16 @@ def main(page):
     #use filter to trace all divs of championships
     #number of champions
     championships = soup.find_all("div", {'class': 'matchCard'})
+    #print(championships)
 
     #function to extract names of championships 
     def champion_titles(championships):
         #find names of championships
         title = championships.contents[1].find("h2").text.strip()
+        #print(title)
         #find number of matches in each championship
-        all_matches = championships.contents[3].find_all("div", class_= ['item future liItem', 'item now liItem'])
+        all_matches = championships.contents[3].find_all("div", class_= ['item future liItem', 'item now liItem', 'item finish liItem'])
+        #print(all_matches)
         num_of_matches = len(all_matches)
         #print(num_of_matches)
 
@@ -32,25 +35,36 @@ def main(page):
             #teams names
             teamA =  all_matches[i].find("div", {'class': 'teams teamA'}).text.strip()
             teamB =  all_matches[i].find("div", {'class': 'teams teamB'}).text.strip()
-            #print(teamB)
+            #print(teamA)
 
             #teams score
-            result = all_matches[i].find("div", {'class':'MResult'}).text.strip()
-            score = result[0]+' - '+result[4]
+            result = all_matches[i].find("div", {'class':'MResult'}).find_all("span", {'class':'score'})
+            score = f"'{result[0].text.strip()} - {result[1].text.strip()}'"
+            #score = result[0]+' - '+result[4]
             #print(score)
 
             #time of the match
             match_time = all_matches[i].find("span", {'class':'time'}).text.strip()
-            print(match_time)
+            #print(match_time)
 
-        #add match info to list of match_details
-        match_details = [{'سم البطولة':title, 'الفريق الاول':teamA, 'الفريق الثاني':teamB, 'ميعاد المباراه':match_time, 'نتيجة المباراه':score}]
+            #add match info to list of match_details
+            match_details.append({"اسم البطولة":title, 'الفريق الاول':teamA, 'الفريق الثاني':teamB, 
+                              'ميعاد المباراه':match_time, 'نتيجة المباراه':score})
 
-    for i in range (championships):
+    for i in range (len(championships)):
         champion_titles(championships[i])
 
+    #**********create csv file***********
+    #detect headers of file
+    try:
+        keys = match_details[0].keys()
 
-    
-
+        with open("D:\Data_Analysis\web_scarping\yallacora\yallacora.csv", 'w', newline='') as output:
+            dict_writer = csv.DictWriter(output, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(match_details)
+            print("File Created")
+    except:
+        print("No such data found")
     
 main(page)
